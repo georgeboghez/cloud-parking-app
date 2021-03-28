@@ -126,7 +126,7 @@ router.post(
                         res.cookie("Authorization", token)
                         res.cookie("Email", email)
                         setTimeout(() => {
-                            res.redirect("/me")                            
+                            res.redirect("/")                            
                         }, 3000);
                     }
                     );
@@ -187,7 +187,7 @@ router.post(
                                 if (err) throw err;
                                 res.cookie("Authorization", token)
                                 res.cookie("Email", email)
-                                res.redirect("/me")
+                                res.redirect("/")
                             }
                             );
                         } catch (e) {
