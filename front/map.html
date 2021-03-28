@@ -12,16 +12,17 @@
         padding: 0;
       }
     </style>
-    <script
-      async
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTuY2oOA2nGKJeU8JmyQ-raRDf9FUTDFQ&callback=initMap"
-    ></script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTuY2oOA2nGKJeU8JmyQ-raRDf9FUTDFQ&callback=initMap"></script>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Map</title>
+    {% include 'sub/head.html' %}
+
   </head>
   <body>
+    <a class="waves-effect waves-light blue btn-small" href="/logout" style="position:absolute; left: 50%; transform: translate(-50%, -50%); bottom: 0;">Log out</a>
+
     <div id="map"></div>
   </body>
   <script>

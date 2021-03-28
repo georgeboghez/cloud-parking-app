@@ -2,17 +2,13 @@ const jwt = require("jsonwebtoken");
 
 module.exports = function (req, res, next) {
     const token = req.cookies["Authorization"];
-    if (!token) return res.status(401).json({
-        message: "Auth Error"
-    });
+    if (!token) return res.redirect("/login");
     try {
         const decoded = jwt.verify(token, "secret");
         req.user = decoded.user;
         next();
     } catch (e) {
         console.error(e);
-        res.status(500).send({
-            message: "Invalid Token"
-        });
+        res.redirect("/login");
     }
 };

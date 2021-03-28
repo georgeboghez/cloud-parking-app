@@ -19,19 +19,13 @@ const fs = require("fs");
 const express = require("express");
 const bodyParser = require("body-parser");
 const user = require("./routes/user");
-const post = require("./routes/post");
 const nunjucks = require("nunjucks")
 const cookieParser = require('cookie-parser')
 var AdmZip = require("adm-zip")
 var zlib = require("zlib")
 const formidable = require("formidable");
-const Post = require("./model/Post");
 const auth = require("./middleware/auth")
 
-const InitiateMongoServer = require("./config/db");
-
-
-InitiateMongoServer();
 const app = express();
 
 const postsPerPage = 5;
@@ -75,134 +69,77 @@ function parseCookies (request) {
   return list;
 }
 
-app.get("/", async (req, res) => {
-  var posts = await Post.find({}, {
-    title: 1,
-    description: 1,
-    publishedDate: 1,
-    imagePath: 1,
-  }).sort({
-    publishedDate: -1
-  }).limit(postsPerPage);
-  
-  // var numberOfPages = Math.ceil(await Post.countDocuments({}) / postsPerPage);
-  
-  res.render("index.html", {
-    posts: posts,
-    currentPage: 1,
-    goToPage: "/login",
-    pageName: "home"
-  })
-});
-
-app.get(/page\/[1-9][0-9]?/, async (req, res) => {
-  try {
-    var pageNumber = parseInt(req.url.toString().substring(6));
-    var numberOfPostsToSkip = pageNumber * postsPerPage - postsPerPage;
-    var posts = await Post.find({}, {
-      title: 1,
-      description: 1,
-      publishedDate: 1
-    }).sort({
-      publishedDate: -1
-    }).skip(numberOfPostsToSkip).limit(postsPerPage);
-    
-    res.render("index.html", {
-      posts: posts,
-      currentPage: pageNumber,
-      postsPerPage: postsPerPage,
-      goToPage: "/",
-      pageName: "home"
-    })
-  } catch (e) {
-    console.log(e.message);
-    res.redirect("/")
-  }
-});
-
-app.get("/signup", (req, res) => {
-  res.render("signup.html", {
-    goToPage: "/",
-    pageName: "signup"
-  })
-});
-
-app.get("/login", (req, res) => {
-  res.render("login.html", {
-    goToPage: "/",
-    pageName: "login"
-  })
+app.get("/login", async (req, res) => {
+  res.render("login-signup.html")
 });
 
 app.get("/favicon.ico", (req, res) => {
-  res.setHeader("Content-Type", "image/svg+xml")
-  res.sendFile(__dirname + '/front/assets/images/LOGO-02.svg')
+  res.setHeader("Content-Type", "image/x-ico")
+  res.sendFile(__dirname + '/front/assets/images/parking.ico')
 });
 
 app.use("/user", user);
-
-app.use("/post", post);
 
 const topicName = 'MyTopic';
 // const data = JSON.stringify({foo: 'bar'});
 
 // Imports the Google Cloud client library
-// const {PubSub} = require('@google-cloud/pubsub');
+const {PubSub} = require('@google-cloud/pubsub');
 const { json } = require("body-parser");
 
 // Creates a client; cache this for further use
-// const pubSubClient = new PubSub();
+const pubSubClient = new PubSub({project_id: "test24-1561374558621", keyFilename: "test24-1561374558621-286fa15cf041.json"});
 
-// async function publishMessage(data) {
-//   // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
-//   const dataBuffer = Buffer.from(data);
+async function publishMessage(data) {
+  // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
+  const dataBuffer = Buffer.from(data);
   
-//   try {
-//     const messageId = await pubSubClient.topic(topicName).publish(dataBuffer);
-//     console.log(`Message ${messageId} published.`);
-//   } catch (error) {
-//     console.error(`Received error while publishing: ${error.message}`);
-//     process.exitCode = 1;
-//   }
-// }
+  try {
+    const messageId = await pubSubClient.topic(topicName).publish(dataBuffer);
+    console.log(`Message ${messageId} published.`);
+  } catch (error) {
+    console.error(`Received error while publishing: ${error.message}`);
+    process.exitCode = 1;
+  }
+}
 
-// // publishMessage();
+// publishMessage();
 
-// const subscriptionName = 'MySub';
-// const timeout = 10;
+const subscriptionName = 'MySub';
+const timeout = 10;
 
-// function listenForMessages() {
-//   // References an existing subscription
-//   const subscription = pubSubClient.subscription(subscriptionName);
+function listenForMessages() {
+  // References an existing subscription
+  const subscription = pubSubClient.subscription(subscriptionName);
   
-//   // Create an event handler to handle messages
-//   const messageHandler = function (message) {
-//     // Do something with the message
-//     console.log(`Message: ${message.toString()}`);
-//     console.log(message.publishTime)
+  // Create an event handler to handle messages
+  const messageHandler = function (message) {
+    // Do something with the message
+    console.log(`Message: ${message.toString()}`);
+    console.log(message.publishTime)
     
-//     // "Ack" (acknowledge receipt of) the message
-//     message.ack();
-//   };
+    // "Ack" (acknowledge receipt of) the message
+    message.ack();
+  };
   
-//   // Create an event handler to handle errors
-//   const errorHandler = function (error) {
-//     // Do something with the error
-//     console.error(`ERROR: ${error}`);
-//     throw error;
-//   };
+  // Create an event handler to handle errors
+  const errorHandler = function (error) {
+    // Do something with the error
+    console.error(`ERROR: ${error}`);
+    throw error;
+  };
   
-//   // Listen for new messages/errors until timeout is hit
-//   subscription.on('message', messageHandler);
-//   subscription.on('error', errorHandler);
+  // Listen for new messages/errors until timeout is hit
+  subscription.on('message', messageHandler);
+  subscription.on('error', errorHandler);
   
-//   // setTimeout(() => {
-//   //   subscription.removeListener('message', messageHandler);
-//   //   subscription.removeListener('error', errorHandler);
-//   // }, timeout * 1000);
-// }
+  // setTimeout(() => {
+  //   subscription.removeListener('message', messageHandler);
+  //   subscription.removeListener('error', errorHandler);
+  // }, timeout * 1000);
+}
 
-// listenForMessages();
+listenForMessages();
 
 app.post("/sendMessage", async (req, res) => {
   try {
@@ -241,58 +178,26 @@ app.post("/sendMessage", async (req, res) => {
   }
 })
 
-app.get("/me", auth, async (req, res) => {
+app.get("/", auth, async (req, res) => {
   try {
-    // request.user is getting fetched from Middleware after token authentication
-    // res.clearCookie("Authorization")
     let cookies = parseCookies(req)
     let email = cookies["Email"]
-    console.log(email)
-    res.render("./submit-post.html", {
-      goToPage: "/",
-      messages: [],
-      pageName: "submit"
+    res.render("./map.html", {
+      messages: []
     })
   } catch (e) {
-    console.log(e.message)
-    res.send({
-      message: "Error in Fetching user"
-    });
+    res.render("login-signup.html")
   }
 })
 
-app.post('/submit', (req, res) => {
-  if (
-    req.body['g-recaptcha-response'] === undefined ||
-    req.body['g-recaptcha-response'] === '' ||
-    req.body['g-recaptcha-response'] === null
-  ) {
-    return res.json({ respCode: 1, error: 'Captcha not completed' })
-  }
-  console.log({
-    name: req.body.name
-  })
-  var secretKey = process.env.secret_key
-  var verificationUrl =
-    'https://www.google.com/recaptcha/api/siteverify?secret=' +
-    secretKey +
-    '&response=' +
-    req.body['g-recaptcha-response']
-  request(verificationUrl, function (error, response, body) {
-    body = JSON.parse(body)
-    if (body.success !== undefined && !body.success) {
-      return res.json({ respCode: 1, error: 'Failed verification!' })
-    }
-  })
-  res.json({ respCode: 0, message: 'success!' })
-  //   res.send('Entry submitted!')
+app.get('/logout', (req, res) => {
+  res.clearCookie("Authorization")
+  res.clearCookie("Email")
+  res.redirect('/')
 })
 
 app.get('*', function (req, res) {
-  res.status(404).render('404.html', {
-    goToPage: "/",
-    pageName: "404"
-  });
+  res.status(404).render('404.html');
 });
 
 // Start the server
