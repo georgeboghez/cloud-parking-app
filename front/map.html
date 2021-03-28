@@ -1,40 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <style>
-      #map {
-        height: 100%;
-      }
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTuY2oOA2nGKJeU8JmyQ-raRDf9FUTDFQ&callback=initMap"></script>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Map</title>
-    {% include 'sub/head.html' %}
-
-  </head>
-  <body>
-    <a class="waves-effect waves-light blue btn-small" href="/logout" style="position:absolute; left: 50%; transform: translate(-50%, -50%); bottom: 0;">Log out</a>
-
-    <div id="map"></div>
-  </body>
-  <script>
-    let map;
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 47.17412, lng: 27.57522 },
-        zoom: 20,
+<head>
+  <style>
+    #map {
+      height: 100%;
+    }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTuY2oOA2nGKJeU8JmyQ-raRDf9FUTDFQ&callback=initMap"></script>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map</title>
+  {% include 'sub/head.html' %}
+  
+</head>
+<body>
+  <a class="waves-effect waves-light blue btn-small" href="/logout" style="position:absolute; left: 50%; transform: translate(-50%, -50%); bottom: 0;">Log out</a>
+  
+  <div id="map"></div>
+</body>
+<script>
+  let map;
+  
+  function getOffsets(numberOfSpots) {
+    if(numberOfSpots <= 50) {
+      return {"lat" : 0.0003, "lng" : 0.0005 }
+    }
+    return {"lat" : 0.0005, "lng" : 0.0007 }
+  }
+  
+  async function initMap() {
+    let resp = await fetch('/locations')
+    let data = await resp.json();
+    data = JSON.parse(data)
+    map = new google.maps.Map(document.getElementById("map"), {
+      zoom: 18,
+      center: { lat: 47.1575, lng: 27.5865 },
+      // mapTypeId: "terrain",
+    });
+    for(let parking of data.locations) {
+      let color = parking.availableSpots > 0 ? "#00FF00" : "#FF0000";
+      let offsets = getOffsets(parking.allSpots);
+      const rectangle = new google.maps.Rectangle({
+        strokeColor: color,
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: color,
+        fillOpacity: 0.25,
+        map,
+        bounds: {
+          north: parking.center.latitude + offsets.lat,
+          south: parking.center.latitude - offsets.lat,
+          east: parking.center.longitude + offsets.lng,
+          west: parking.center.longitude - offsets.lng,
+        },
+      });
+      google.maps.event.addListener(rectangle, 'click', async function(event) {
+        resp = await fetch('/book-spot', { 
+          method : 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({'name' : parking.name})
+        })
+        content = await resp.json();
+        content = JSON.parse(content)
+        alert(`availableSpots:${content.spots}`)
       });
     }
-
-    initMap();
-  </script>
+  }
+  
+  
+  
+  initMap();
+</script>
 </html>

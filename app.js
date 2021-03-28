@@ -25,6 +25,13 @@ var AdmZip = require("adm-zip")
 var zlib = require("zlib")
 const formidable = require("formidable");
 const auth = require("./middleware/auth")
+const { Datastore } = require("@google-cloud/datastore");
+
+// Creates a client
+const datastore = new Datastore({
+  projectId: 'test24-1561374558621', //eg my-project-0o0o0o0o'
+  keyFilename: "test24-1561374558621-84e3e44e928c.json" //eg my-project-0fwewexyz.json
+});
 
 const app = express();
 
@@ -178,10 +185,86 @@ app.post("/sendMessage", async (req, res) => {
   }
 })
 
+app.get("/locations", async (req, res) => {
+  try {
+    const query = datastore.createQuery('Location');
+    const [locations] = await datastore.runQuery(query);
+    
+    return res.status(200).json(JSON.stringify({"locations" : locations}))
+  } catch (e) {
+    return res.status(418).json(JSON.stringify({"locations" : []}))
+  }
+})
+
+app.get("/available-locations", async (req, res) => {
+  try {
+    const query = datastore.createQuery('Location').filter("availableSpots", ">", 0);
+    const [locations] = await datastore.runQuery(query);
+    
+    return res.status(200).json(JSON.stringify({"locations" : locations}))
+  } catch (e) {
+    return res.status(418).json(JSON.stringify({"locations" : []}))
+  }
+})
+
+app.post("/new-location", async (req, res) => {
+  try {
+    const kind = "Location";
+    const locationKey = datastore.key([kind]);
+    let location = {
+      key: locationKey,
+      data: {
+        "north": 47.1575,
+        "south" : 47.1565,
+        "east": 27.5875,
+        "west": 27.5865,
+        "center": {latitude: 47.157, longitude: 27.587},
+        "name": "Palatul Culturii",
+        "availableSpots": 100,
+        "allSpots": 0
+      }
+    };
+    
+    await datastore.save(location);
+    
+    return res.status(200).json(JSON.stringify({"message" : "success"}))
+  } catch (e) {
+    console.log(e.message)
+    return res.status(501).json(JSON.stringify({"message" : e.message}))
+  }
+})
+
+app.put("/book-spot", async (req, res) => {
+  try {
+    let name = req.body.name
+    // const query = datastore.createQuery('Location').filter('name', '=', name);
+    const query = datastore.createQuery('Location');
+    const [locations] = await datastore.runQuery(query);
+    let desiredLocation;
+    for(let location of locations) {
+      if(location.name == name) {
+        desiredLocation = location;
+        break;
+      }
+    }
+    if(!desiredLocation) {
+      return res.status(404).json(JSON.stringify({"message": "not found", "locations" : []}))
+    }
+    if(desiredLocation.availableSpots > 0) {
+      desiredLocation.availableSpots -= 1
+      await datastore.save(desiredLocation);
+    }
+    return res.status(200).json(JSON.stringify({"spots" : desiredLocation.availableSpots}))
+  } catch (e) {
+    return res.status(418).json(JSON.stringify({"locations" : []}))
+  }
+})
+
 app.get("/", auth, async (req, res) => {
   try {
     let cookies = parseCookies(req)
     let email = cookies["Email"]
+    
     res.render("./map.html", {
       messages: []
     })
