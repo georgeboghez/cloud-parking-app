@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    {% include 'sub/head.html' %}
+    {% include 'sub/scripts.html' %}
+</head>
+
+<body>
+    
+    {% include 'sub/header.html' %}
+    
+    <main>
+        <div id="form-card">
+            <h1>Sign Up</h1>
+            <form action="/user/signup" method="POST">
+                <label for="username"></label>
+                <input type="text" id="username" name="username" placeholder="Username...">
+                <label for="email"></label>
+                <input type="text" id="email" name="email" placeholder="Email...">
+                <label for="password"></label>
+                <input type="password" id="password" name="password" placeholder="Parola...">
+                {% for error in errors %}
+                <p class="form-error-message">
+                    {{ error }}
+                </p>
+                {% endfor %}
+                <div class="g-recaptcha" data-sitekey="6LcrM5IaAAAAAPFlGvM2nKx197UUCzSP-4OKwlXH" data-callback="correctCaptcha"></div>
+                <div class="form-button-container">
+                    <button type="submit" value="Submit">Trimite</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    
+    {% include 'sub/footer.html' %}
+    
+</body>
+<script>
+    var correctCaptcha = function(response) {
+        var ans = grecaptcha.getResponse()
+        if(ans.length != null){
+            grecaptcha.execute();
+            console.log("Form Submitted!", "success")
+        } else {
+            console.log("Reverify CAPTCHA", "error")
+        }
+    }
+</script>
+
+</html>

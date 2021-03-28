@@ -1,0 +1,29 @@
+footer {
+    height: 70px;
+    position: relative;
+    margin-left: var(--width-s);
+    width: calc(100% - var(--width-s));
+    bottom: 0px;
+    text-transform: uppercase;
+    background-color: var(--primary);
+    border-top: 2px solid var(--grey);
+}
+
+#footer-content {
+    display: flex;
+    overflow: auto;
+    height: 100%;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--content-color);
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+#social-networks-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: var(--width-xs);
+}

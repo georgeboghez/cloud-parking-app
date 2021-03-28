@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	{% include 'sub/head.html' %}
+	{% include 'sub/scripts.html' %}
+</head>
+
+<body>
+    {% include 'sub/header.html' %}
+
+    <main>
+        <section id="posts-list">
+            <h1 id="page-title">
+                {{ post.title }}
+            </h1>
+            <div class="post-space">
+                <p class="post-date">
+                    {{ post.publishedDate.getDate() }}
+                    {{ post.publishedDate.toLocaleString('default', {month: 'long'}) }}
+                </p>
+                <div class="author-section">
+                    <div class="author-avatar">
+
+                    </div>
+                    <div class="post-author-name-area">
+                        <p>Autor</p>
+                        <author>Andrei Grecu</author>
+                    </div>
+                </div>
+                <p class="post-content">
+                    {{ post.description | safe }}
+                </p>
+                <p class="post-content">
+                     {{ post.textContent | safe }} 
+                </p>
+            </div>
+        </section>
+    </main>
+
+    {% include 'sub/footer.html' %}
+
+</body>
+
+</html>

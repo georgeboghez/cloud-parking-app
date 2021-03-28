@@ -1,0 +1,60 @@
+<header id="header">
+    <div id="logo-section">
+        <a href="{{ goToPage }}">
+            {% include 'assets/images/LOGO.svg' %}
+        </a>
+    </div>
+    {% if goToPage !== "/" %}
+    <label class="switch">
+        <input class="switch-input" type="checkbox" onchange="changeTheme()" autocomplete="off">
+        <span class="slider round"></span>
+    </label>
+    <nav id="navbar">
+        <a href="/">
+            <button id="home-button">
+                Acasă
+            </button>
+        </a>
+        <button id="life-button">
+            Viață
+        </button>
+        <button id="work-button">
+            Carieră
+        </button>
+        <button id="various-button">
+            Diverse
+        </button>
+    </nav>
+    <div id="mic-recording">
+        {% include 'assets/images/MIC.svg' %}
+        <i id="recording-button" class="fas fa-play fa-2x" onclick="playRecording()"></i>
+        <audio id="audio" src="/assets/audio/andrei.mp3"></audio>
+    </div>
+    <button id="dropdown-button" onclick="showDropdown()">&#9776;</button>
+    {% endif %}
+</header>
+{% if goToPage !== "/" %}
+<div id="dropdown-content" class="hide">
+    <div id="dropdown-navbar">
+        <a href="/">
+            <button id="dropdown-home-button">
+                Acasă
+            </button>
+        </a>
+        <button id="dropdown-life-button">
+            Viață
+        </button>
+        <button id="dropdown-work-button">
+            Carieră
+        </button>
+        <button id="dropdown-various-button">
+            Diverse
+        </button>
+    </div>
+    <img id="dropdown-mic-recording">
+    {% include 'assets/images/MIC.svg' %}
+    <i id="dropdown-recording-button" class="fas fa-play fa-2x" onclick="playRecording()">
+    </i>
+</div>
+</div>
+{% endif %}

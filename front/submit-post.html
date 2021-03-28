@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    {% include 'sub/head.html' %}
+    {% include 'sub/scripts.html' %}
+</head>
+
+<body>
+    
+    {% include 'sub/header.html' %}
+    
+    <main>
+        <div id="form-card">
+            <div class="prev-mess">
+                {% for message in messages %}
+                <p>{{ message.from }} : {{ message.message }}</p>
+                {% else %}
+                <p>Lista mesaje goala</p>
+                {% endfor %}
+                
+            </div>
+            <h1>Trimitere Mesaj</h1>
+            <!-- <form action="/post/submitPost" method="POST" enctype="multipart/form-data"> -->
+                <form action="/sendMessage" method="POST" enctype="multipart/form-data">
+                    <!-- <label for="title"></label> -->
+                    <!-- <input type="text" id="title" name="title" placeholder="Titlu..."> -->
+                    <!-- <label for="description"></label> -->
+                    <!-- <input type="text" id="description" name="description" placeholder="Descriere..."> -->
+                    <label for="message"></label>
+                    <input type="text" id="message" name="message" placeholder="message...">
+                    <!-- <input type="file" name="image" id="postImage"> -->
+                    <div class="form-button-container">
+                        <button type="submit" value="Submit">Trimite</button>
+                    </div>
+                </form> 
+            </div>
+        </main>
+        
+        {% include 'sub/footer.html' %}
+        
+    </body>
+    
+    </html>

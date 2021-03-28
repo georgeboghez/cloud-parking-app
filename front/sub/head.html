@@ -1,0 +1,15 @@
+<title>Andrei Grecu</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" type="text/css" href="/assets/css/header.css?version=1.6">
+<link rel="stylesheet" type="text/css" href="/assets/css/footer.css?version=1.4">
+<link rel="stylesheet" type="text/css" href="/assets/css/style.css?version=1.5">
+{% if pageName==="home" or pageName==="post"  or pageName==="404" %}
+<link rel="stylesheet" type="text/css" href="/assets/css/index.css?version=1.5">
+{% elif pageName === "signup" or pageName === "login" %}
+<link rel="stylesheet" type="text/css" href="/assets/css/user-actions.css?version=1.5">
+{% elif pageName === "submit" %}
+<link rel="stylesheet" type="text/css" href="/assets/css/submit-post.css?version=1.5">
+{% endif %}
+<link rel="stylesheet" type="text/css" href="/assets/css/mobile.css?version=1.2">
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>

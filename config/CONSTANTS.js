@@ -1,0 +1,3 @@
+const CAPTCHA_KEY = "6LcrM5IaAAAAANpHZ3bAjIf654RGlFTKOj-jW8Uy"
+
+module.exports = {"CAPTCHA_KEY" : CAPTCHA_KEY}
