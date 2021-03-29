@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+
+
+<html>
+
+<head>
+    <title>Place Search Pagination</title>
+    <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
+        async></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+
+</head>
+
+<body>
+
+    <div id="container">
+        <div id="map"></div>
+
+        <div class="pac-card" id="pac-card" >
+            <div id="pac-container" style="position:absolute; left: 50%; transform: translate(-100%, -100%); top: 100px;">
+                <input id="pac-input" type="text" placeholder="Enter a location"  />
+            </div>
+        </div>
+        <div id="sidebar">
+            <h2>Results</h2>
+            <ul id="places"></ul>
+            <button id="more">Load more results</button>
+        </div>
+    </div>
+
+    <script src="./index.js"></script>
+</body>
+
+</html>
