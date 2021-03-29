@@ -1,40 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <style>
-      #map {
-        height: 100%;
-      }
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bj&callback=initMap"></script>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Map</title>
-    {% include 'sub/head.html' %}
 
-  </head>
-  <body>
-    <a class="waves-effect waves-light blue btn-small" href="/logout" style="position:absolute; left: 50%; transform: translate(-50%, -50%); bottom: 0;">Log out</a>
 
+
+<html>
+
+<head>
+  <title>Place Search Pagination</title>
+  <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+  <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
+        async></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+  <link rel="stylesheet" type="text/css" href="./assets/css/_style.css" />
+
+</head>
+
+<body>
+
+  <div id="container">
     <div id="map"></div>
-  </body>
-  <script>
-    let map;
 
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 47.17412, lng: 27.57522 },
-        zoom: 20,
-      });
-    }
+    <div class="pac-card" id="pac-card">
+      <div id="pac-container" style="position:absolute; left: 50%; transform: translate(-100%, -100%); top: 100px;">
+        <input id="pac-input" type="text" placeholder="Enter a location" />
+      </div>
+    </div>
+    <div id="sidebar">
+      <h2>Results</h2>
+      <ul id="places"></ul>
+      <button id="more">Load more results</button>
+    </div>
+  </div>
 
-    initMap();
-  </script>
+  <script src="./assets/js/_index.js"></script>
+</body>
+
 </html>

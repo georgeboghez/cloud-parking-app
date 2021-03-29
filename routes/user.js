@@ -47,27 +47,27 @@ router.post(
                 errorSignup: true
             });
         }
-        if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
-            return res.status(400).render("./login-signup.html", {
-                errors: ['Captcha not completed'],
-                errorSignup: true
-            })
-        }
-        var secretKey = CONSTANTS.CAPTCHA_KEY
-        var verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${req.body['g-recaptcha-response']}`
-        request(verificationUrl, function (error, response, body) {
-            body = JSON.parse(body)
-            if (body.success !== undefined && !body.success) {
+        // if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+        //     return res.status(400).render("./login-signup.html", {
+        //         errors: ['Captcha not completed'],
+        //         errorSignup: true
+        //     })
+        // }
+        // var secretKey = CONSTANTS.CAPTCHA_KEY
+        // var verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${req.body['g-recaptcha-response']}`
+        // request(verificationUrl, function (error, response, body) {
+        //     body = JSON.parse(body)
+        //     if (body.success !== undefined && !body.success) {
                 
-                return res.status(400).render("./login-signup.html", {
-                    errors: ['Failed verification!'],
-                    errorSignup: true
-                })
-            }
-            else {
+        //         return res.status(400).render("./login-signup.html", {
+        //             errors: ['Failed verification!'],
+        //             errorSignup: true
+        //         })
+        //     }
+        //     else {
                 
-            }
-        })
+        //     }
+        // })
         const {
             username,
             email,
@@ -144,25 +144,25 @@ router.post(
                     });
                 }
                 
-                if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
-                    return res.status(400).render("./login-signup.html", {
-                        errors: ['Captcha not completed']
-                    })
-                }
-                var secretKey = CONSTANTS.CAPTCHA_KEY
-                var verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${req.body['g-recaptcha-response']}`
-                request(verificationUrl, function (error, response, body) {
-                    body = JSON.parse(body)
-                    if (body.success !== undefined && !body.success) {
+                // if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+                //     return res.status(400).render("./login-signup.html", {
+                //         errors: ['Captcha not completed']
+                //     })
+                // }
+                // var secretKey = CONSTANTS.CAPTCHA_KEY
+                // var verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${req.body['g-recaptcha-response']}`
+                // request(verificationUrl, function (error, response, body) {
+                //     body = JSON.parse(body)
+                //     if (body.success !== undefined && !body.success) {
                         
-                        return res.status(400).render("./login-signup.html", {
-                            errors: ['Failed verification!']
-                        })
-                    }
-                    else {
+                //         return res.status(400).render("./login-signup.html", {
+                //             errors: ['Failed verification!']
+                //         })
+                //     }
+                //     else {
                         
-                    }
-                })
+                //     }
+                // })
                 const {
                     email,
                     password
