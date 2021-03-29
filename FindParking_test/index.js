@@ -75,8 +75,10 @@ function addMarker(_position, icon, map, type, name, pyrmont) {
 
               // GET DIRECTIONS
 
-              directionsService = new google.maps.DirectionsService();
-              directionsDisplay = new google.maps.DirectionsRenderer();
+              if (directionsService == null)
+                directionsService = new google.maps.DirectionsService();
+              if (directionsDisplay == null)
+                directionsDisplay = new google.maps.DirectionsRenderer();
 
               directionsDisplay.setMap(map);
               directionsDisplay.setPanel(document.getElementById('panel'));
@@ -88,12 +90,12 @@ function addMarker(_position, icon, map, type, name, pyrmont) {
                 avoidHighways: false,
                 avoidTolls: false,
                 travelMode: google.maps.TravelMode.DRIVING
-            };
+              };
 
               directionsService.route(request, function (response, status) {
                 if (status == google.maps.DirectionsStatus.OK) {
                   directionsDisplay.setDirections(response);
-                  
+
                 }
               });
             },
@@ -250,8 +252,8 @@ function initMap() {
     generateParkingSpots(map, pyrmont);
     //infowindowContent.children["place-name"].textContent = place.name;
     //infowindowContent.children["place-address"].textContent =
-      //place.formatted_address;
-      infowindow.open(map, marker);
+    //place.formatted_address;
+    infowindow.open(map, marker);
   });
 
 
