@@ -6,11 +6,9 @@
 
 <head>
   <title>Place Search Pagination</title>
-  <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
-  <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
-        async></script>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+  <!-- Async script executes immediately and must be after any DOM elements used in callback. 
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&libraries=places"></script>-->
+  
   <link rel="stylesheet" type="text/css" href="./assets/css/_style.css" />
 
 </head>
@@ -33,6 +31,11 @@
   </div>
 
   <script src="./assets/js/_index.js"></script>
+
+  <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
+        async></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
 </body>
 
 </html>

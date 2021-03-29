@@ -1,6 +1,6 @@
 // This example requires the Places library. Include the libraries=places
 // parameter when you first load the API. For example:
-//<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTuY2oOA2nGKJeU8JmyQ-raRDf9FUTDFQ&libraries=places"></script>
+//<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTuY2oOA2nGKJeU8JmyQ-raRDf9FUTDFQ&libraries=places">
 
 /* ParkingLot = {
   name: name,
