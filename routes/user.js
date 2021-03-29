@@ -64,9 +64,6 @@ router.post(
                     errorSignup: true
                 })
             }
-            else {
-                
-            }
         })
         const {
             username,
@@ -143,7 +140,6 @@ router.post(
                         })
                     });
                 }
-                
                 if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
                     return res.status(400).render("./login-signup.html", {
                         errors: ['Captcha not completed']
@@ -158,9 +154,6 @@ router.post(
                         return res.status(400).render("./login-signup.html", {
                             errors: ['Failed verification!']
                         })
-                    }
-                    else {
-                        
                     }
                 })
                 const {
