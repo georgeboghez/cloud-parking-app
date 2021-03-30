@@ -300,3 +300,21 @@ function addPlaces(places, map, pyrmont) {
     }
   }
 }
+
+var lastMessage = '';
+
+setInterval(() => {
+  fetch('/check-notifications')
+  .then(response => response.json())
+  .then(data => { 
+                  data = JSON.parse(data);
+                  if(data.message && data.message != lastMessage) {
+                    M.toast({html: data.message});
+                    M.toast({html: data.translation});
+                    lastMessage = data.message;
+                  }
+                })
+  .catch((e) => {
+    console.log(e);
+  })
+}, 2000);

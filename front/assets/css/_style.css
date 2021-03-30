@@ -116,3 +116,12 @@ button:disabled {
 #pac-input:focus {
   border-color: #4d90fe;
 }
+
+#toast-container {
+  top: auto !important;
+  right: auto !important;
+  position:absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, -50%);
+}

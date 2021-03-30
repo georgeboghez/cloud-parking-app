@@ -25,6 +25,7 @@ var AdmZip = require("adm-zip")
 var zlib = require("zlib")
 const formidable = require("formidable");
 const auth = require("./middleware/auth")
+const translate = require('./translate')
 
 const app = express();
 
@@ -103,21 +104,24 @@ async function publishMessage(data) {
   }
 }
 
-// publishMessage();
 
 const subscriptionName = 'MySub';
 const timeout = 10;
 
+var notificationMsg = '';
+
 function listenForMessages() {
   // References an existing subscription
   const subscription = pubSubClient.subscription(subscriptionName);
-  
+
   // Create an event handler to handle messages
   const messageHandler = function (message) {
     // Do something with the message
-    console.log(`Message: ${message.toString()}`);
-    console.log(message.publishTime)
-    
+
+    // console.log(Buffer.from(message.data, 'base64').toString())
+
+    notificationMsg = Buffer.from(message.data, 'base64').toString()
+
     // "Ack" (acknowledge receipt of) the message
     message.ack();
   };
@@ -139,7 +143,13 @@ function listenForMessages() {
   // }, timeout * 1000);
 }
 
+// publishMessage("Message");
 listenForMessages();
+
+// setInterval(() => {
+//   console.log(`notif: ${notificationMsg}`)
+// }, 1000);
+
 
 app.post("/sendMessage", async (req, res) => {
   try {
@@ -194,6 +204,11 @@ app.get('/logout', (req, res) => {
   res.clearCookie("Authorization")
   res.clearCookie("Email")
   res.redirect('/')
+})
+
+app.get('/check-notifications', async (req, res) => {
+  let translation = await translate.translate(notificationMsg, "en")
+  res.status(200).json(JSON.stringify({"message": notificationMsg, "translation" : translation[0]}))
 })
 
 app.get('*', function (req, res) {
