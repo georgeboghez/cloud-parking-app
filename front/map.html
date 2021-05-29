@@ -7,12 +7,14 @@
 <head>
   <title>Place Search Pagination</title>
   <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3" async></script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
+    async></script>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
   <link rel="stylesheet" type="text/css" href="./assets/css/_style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  
+
 </head>
 
 <body>
@@ -29,13 +31,35 @@
       <button id="more">Load more results</button>
     </div>
   </div>
-  <a class="waves-effect waves-light red btn-small" href="/logout" style="position:absolute; bottom: 1px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Log out</a> <!-- -->  
+  <a class="waves-effect waves-light red btn-small" href="/logout"
+    style="position:absolute; bottom: 1px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Log out</a> <!-- -->
+
+  <div id="myModal" class="modal">
+    <div id="modalContent">
+      <button onclick="closeModal()">X</button>
+      <h3 id="modalAvailableSpots"></h3>
+      <label for="license">License Plate Number</label>
+      <input type="text" id="license" name="license">
+      <label for="startTime">Start time</label>
+      <input type="time" id="startTime" name="startTime">
+      <label for="endTime">End time</label>
+      <input type="time" id="endTime" name="endTime">
+    </div>
+    <button onclick="reserveSpot()"></button>
+  </div>
+
   <script src="./assets/js/_index.js"></script>
 
   <!-- <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
-        async></script>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script> -->
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
+    async></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script> -->
+  <!-- <button id="myBtn">Open Modal</button> -->
+
+  <script async
+  src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"> 
+  </script>
+
 </body>
 
 </html>

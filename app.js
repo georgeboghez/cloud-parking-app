@@ -26,10 +26,15 @@ var zlib = require("zlib")
 const formidable = require("formidable");
 const auth = require("./middleware/auth")
 const translate = require('./translate')
+const { Datastore } = require("@google-cloud/datastore");
+const datastore = new Datastore({
+  projectId: 'test24-1561374558621', //eg my-project-0o0o0o0o'
+  keyFilename: "test24-1561374558621-84e3e44e928c.json" //eg my-project-0fwewexyz.json
+});
+
 
 const app = express();
 
-const postsPerPage = 5;
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -87,6 +92,7 @@ const topicName = 'MyTopic';
 // Imports the Google Cloud client library
 const {PubSub} = require('@google-cloud/pubsub');
 const { json } = require("body-parser");
+const { url } = require("inspector");
 
 // Creates a client; cache this for further use
 const pubSubClient = new PubSub({project_id: "test24-1561374558621", keyFilename: "test24-1561374558621-286fa15cf041.json"});
@@ -206,9 +212,119 @@ app.get('/logout', (req, res) => {
   res.redirect('/')
 })
 
+function getRandom() {
+  return Math.floor(Math.random() * Math.floor(40)) + 10;
+}
+
+app.get('/parking-spots', async (req, res) => {
+  try {
+    const req_url = new URL('https://www.google.com' + req.url)
+    const place_id = req_url.searchParams.get("place_id")
+    
+    const lat = req_url.searchParams.get("lat")
+    const lng = req_url.searchParams.get("lng")
+
+    let query = datastore.createQuery('Location').filter("id", "=", place_id);
+    let [locations] = await datastore.runQuery(query);
+    
+    if (locations.length > 0) {
+        return res.status(200).json(JSON.stringify({"spots":locations[0]}));
+    }
+
+    query = datastore.createQuery('Location').filter("place_id", "=", place_id);
+    [locations] = await datastore.runQuery(query);
+    
+    if (locations.length > 0) {
+        return res.status(200).json(JSON.stringify(locations[0]));
+    }
+
+    const allSpots = getRandom();
+
+    let cookies = parseCookies(req)
+    let email = cookies["Email"]
+
+    const kind = "Location";
+    const locationKey = datastore.key([kind]);
+    const location = {
+        key: locationKey,
+        data: {
+            "allSpots": allSpots,
+            "availableSpots": allSpots,
+            "place_id": place_id,
+            "lat": lat,
+            "lng": lng
+        }
+    };
+    
+    await datastore.save(location);
+    return res.json(JSON.stringify(location.data))
+  } catch (error) {
+    return res.json(JSON.stringify({"message":error.message}))
+  }
+})
+
+app.patch('/parking-spots', async (req, res) => {
+  try {
+    const req_url = new URL('https://www.google.com' + req.url)
+    const place_id = req_url.searchParams.get("place_id")
+    const type = req_url.searchParams.get("type")
+
+    let query = datastore.createQuery('Location').filter("id", "=", place_id);
+    let [locations] = await datastore.runQuery(query);
+    
+    let location = null;
+    if (locations.length > 0) {
+      location = locations[0];
+    }
+    
+    query = datastore.createQuery('Location').filter("place_id", "=", place_id);
+    [locations] = await datastore.runQuery(query);
+    
+    if (locations.length > 0) {
+        location = locations[0];
+    }
+
+    if(location != null) {
+      location["availableSpots"] = type == "decrease" ? --location["availableSpots"] : ++location["availableSpots"];
+
+      await datastore.update(location);
+      return res.json(JSON.stringify(location))
+    }
+
+    return res.status(404).json(JSON.stringify({"error": `location ${place_id} not found`}));
+  } catch (error) {
+    return res.json(JSON.stringify({"message":error.message}))
+  }
+})
+
 app.get('/check-notifications', async (req, res) => {
   let translation = await translate.translate(notificationMsg, "en")
   res.status(200).json(JSON.stringify({"message": notificationMsg, "translation" : translation[0]}))
+})
+
+app.post('/reserve-spot', async (req, res) => {
+  try {
+    let cookies = parseCookies(req)
+    let email = cookies["Email"]
+  
+    const kind = "Reservations";
+    const reservationKey = datastore.key([kind]);
+    const reservation = {
+        key: reservationKey,
+        data: {
+            "startTime": req.body["startTime"],
+            "endTime": req.body["endTime"],
+            "license": req.body["license"],
+            "email":email,
+            "place_id": req.body["place_id"]
+        }
+    };
+    
+    await datastore.save(reservation);
+    return res.json(JSON.stringify({"msg": "success"}))    
+  } catch (error) {
+    return res.json(JSON.stringify({"error": error.message}))
+  }
 })
 
 app.get('*', function (req, res) {
