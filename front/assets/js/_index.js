@@ -35,6 +35,10 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
   infoWindow.open(map);
 }
 
+
+var reservations;
+var parking_location;
+
 function addMarker(_position, icon, map, type, name, pyrmont, place_id) {
   const marker = new google.maps.Marker({
     position: _position,
@@ -68,75 +72,54 @@ function addMarker(_position, icon, map, type, name, pyrmont, place_id) {
     let content = await response.json()
 
     content = JSON.parse(content);
-    if (content["availableSpots"] == 0) {
-      alert(`availableSpots: 0 / ${content["allSpots"]}`)
-      return
-    }
-    displayModal(`${content["availableSpots"]} / ${content["allSpots"]}`)
-    return
-    // var confirmed = confirm(`availableSpots: ${content["availableSpots"]} / ${content["allSpots"]}`)
 
-    if (confirmed) {
-      // response = await fetch(`/parking-spots?place_id=${place_id}&type=decrease`, {
-      //   method: 'PATCH', // *GET, POST, PUT, DELETE, etc.
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   },
-      // })
-      // content = await response.json()
-      // content = JSON.parse(content);
+    parking_location = content["location"];
+    reservations = content["reservations"];
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          infoWindow.setPosition(pos);
+          infoWindow.setContent("Location found.");
+          infoWindow.open(map);
+          map.setCenter(pos);
 
-      if (content) {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const pos = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-              };
-              infoWindow.setPosition(pos);
-              infoWindow.setContent("Location found.");
-              infoWindow.open(map);
-              map.setCenter(pos);
+          // GET DIRECTIONS
 
-              // GET DIRECTIONS
+          if (directionsService == null)
+            directionsService = new google.maps.DirectionsService();
+          if (directionsDisplay == null)
+            directionsDisplay = new google.maps.DirectionsRenderer();
 
-              if (directionsService == null)
-                directionsService = new google.maps.DirectionsService();
-              if (directionsDisplay == null)
-                directionsDisplay = new google.maps.DirectionsRenderer();
+          directionsDisplay.setMap(map);
+          directionsDisplay.setPanel(document.getElementById('panel'));
 
-              directionsDisplay.setMap(map);
-              directionsDisplay.setPanel(document.getElementById('panel'));
+          var request = {
+            origin: new google.maps.LatLng(pos.lat, pos.lng),
+            destination: new google.maps.LatLng(_position.lat(), _position.lng()),
+            optimizeWaypoints: true,
+            avoidHighways: false,
+            avoidTolls: false,
+            travelMode: google.maps.TravelMode.DRIVING
+          };
 
-              var request = {
-                origin: new google.maps.LatLng(pos.lat, pos.lng),
-                destination: new google.maps.LatLng(_position.lat(), _position.lng()),
-                optimizeWaypoints: true,
-                avoidHighways: false,
-                avoidTolls: false,
-                travelMode: google.maps.TravelMode.DRIVING
-              };
-
-              directionsService.route(request, function (response, status) {
-                if (status == google.maps.DirectionsStatus.OK) {
-                  directionsDisplay.setDirections(response);
-
-                }
-              });
-            },
-            () => {
-              handleLocationError(true, infoWindow, map.getCenter());
+          directionsService.route(request, function (response, status) {
+            if (status == google.maps.DirectionsStatus.OK) {
+              directionsDisplay.setDirections(response);
             }
-          );
-        } else {
-          // Browser doesn't support Geolocation
-          handleLocationError(false, infoWindow, map.getCenter());
+          });
+        },
+        () => {
+          handleLocationError(true, infoWindow, map.getCenter());
         }
-      } else {
-        alert("Please choose another parking lot.")
-      }
+      );
+    } else {
+      handleLocationError(false, infoWindow, map.getCenter());
     }
+    displayModal()
   });
 
 }
@@ -155,17 +138,28 @@ function generateParkingSpots(map, pyrmont) {
     }
   };
   // Perform a nearby search.
-  console.log(pyrmont)
   service.nearbySearch({
       location: pyrmont,
       radius: 200,
       type: "parking"
     },
-    (results, status, pagination) => {
+    async (results, status, pagination) => {
       if (status !== "OK" || !results) return;
-      console.log(results)
-      addPlaces(results, map, pyrmont);
+
+      let response = await fetch(`/parking-spots`, {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      let content = await response.json()
+  
+      content = JSON.parse(content);
+
+      addPlaces(results, map, pyrmont, content.locations);
       moreButton.disabled = !pagination || !pagination.hasNextPage;
+
+
 
       if (pagination && pagination.hasNextPage) {
         getNextPage = () => {
@@ -186,7 +180,7 @@ const icons = {
 
 };
 
-
+var map;
 
 function initMap() {
   // Create the map.
@@ -194,7 +188,7 @@ function initMap() {
     lat: 47.1543244,
     lng: 27.5897312
   };
-  const map = new google.maps.Map(document.getElementById("map"), {
+  map = new google.maps.Map(document.getElementById("map"), {
     center: pyrmont,
     zoom: 17,
     mapId: "8d193001f940fde3",
@@ -232,6 +226,26 @@ function initMap() {
     });*/
 
   // DESTINATION
+  let infoWindow = new google.maps.InfoWindow({
+    content: "Click the map to get Lat/Lng!",
+  });
+  infoWindow.open(map);
+
+
+  map.addListener("click", (mapsMouseEvent) => {
+    // Close the current InfoWindow.
+    infoWindow.close();
+    // Create a new InfoWindow.
+    infoWindow = new google.maps.InfoWindow({
+      position: mapsMouseEvent.latLng,
+    });
+    infoWindow.setContent(
+      JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
+    );
+    infoWindow.open(map);
+  });
+
+
   const card = document.getElementById("pac-card");
   const input = document.getElementById("pac-input");
   const options = {
@@ -246,9 +260,8 @@ function initMap() {
   // so that the autocomplete requests use the current map bounds for the
   // bounds option in the request.
   autocomplete.bindTo("bounds", map);
-  const infowindow = new google.maps.InfoWindow();
+  infowindow = new google.maps.InfoWindow();
   const infowindowContent = document.getElementById("infowindow-content");
-  infowindow.setContent(infowindowContent);
   const marker = new google.maps.Marker({
     map,
     anchorPoint: new google.maps.Point(0, -29),
@@ -257,6 +270,7 @@ function initMap() {
     infowindow.close();
     marker.setVisible(false);
     const place = autocomplete.getPlace();
+    infowindow.setContent(place.name);
 
 
     if (!place.geometry || !place.geometry.location) {
@@ -321,12 +335,16 @@ function initMap() {
 
 }
 
-function addPlaces(places, map, pyrmont) {
-
+function addPlaces(places, map, pyrmont, customPlaces) {
   for (const place of places) {
     if (place.geometry && place.geometry.location) {
       addMarker(place.geometry.location, icons.parking.icon, map, "parking", place.name, pyrmont, place.place_id)
     }
+  }
+
+  for (const place of customPlaces) {
+    let location = new google.maps.LatLng(parseFloat(place.lat),parseFloat(place.lng))
+    addMarker(location, icons.parking.icon, map, "parking", place.name, pyrmont, place.id)
   }
 }
 
@@ -438,12 +456,12 @@ function onPaymentAuthorized(paymentData) {
       .then(function () {
         paid = true
         alert("Payment successfully completed. Don't forget to press 'Submit'.")
-        resolve({          
+        reserveSpot()
+        resolve({
           transactionState: 'SUCCESS'
         });
       })
       .catch(function () {
-
         resolve({
           transactionState: 'ERROR',
           error: {
@@ -507,28 +525,29 @@ function getMinutesBetweenDates(startDate, endDate) {
 function minutesToUSD(minutes) {
   let halves = parseInt(minutes / 30)
   let rest = minutes % 30
-  if(rest > 0) {
+  if (rest > 0) {
     halves += 1
   }
   return (halves * 0.5).toFixed(2).toString()
 }
 
 function onGooglePaymentButtonClicked() {
-  let startTimeInput = document.getElementById("startTime")
-  let endTimeInput = document.getElementById("endTime")
+  // let startDateInput = document.getElementById("startDate")
+  // let endDateInput = document.getElementById("endDate")
+  let startDateVal = document.getElementById("startDate").value
+  let endDateVal = document.getElementById("endDate").value
 
-  let startTime = document.getElementById("startTime").value
-  let endTime = document.getElementById("endTime").value
+  if(startDateVal == "" || endDateVal == "") {
+    alert("Please insert a valid Starting Date or a valid Ending Date.")
+    return;
+  }
 
+  let startDate = new Date(document.getElementById("startDate").value)
+  let endDate = new Date(document.getElementById("endDate").value)
 
-  startTime = new Date("01/01/2007 " + startTime);
-  endTime = new Date("01/01/2007 " + endTime);
+  let diff = getMinutesBetweenDates(startDate, endDate);
 
-  let diff = getMinutesBetweenDates(startTime, endTime);
-
-  if(diff <= 0) {
-    startTimeInput.value = "00:00"
-    endTimeInput.value = "00:00"
+  if (diff <= 0) {
     alert("End time was earlier than Start time. Re-enter values.")
     return;
   }
@@ -554,59 +573,247 @@ function processPayment(paymentData) {
 }
 
 
-function displayModal(availableSpots) {
-  avs = document.getElementById("modalAvailableSpots")
-  avs.innerHTML = `Available spots: ${availableSpots}`
+function displayModal() {
+  // avs = document.getElementById("modalAvailableSpots")
+  // avs.innerHTML = `Available spots: ${availableSpots}`
+  modal.style.display = "block";
+}
+
+
+function displayCreateModal() {
+  // avs = document.getElementById("modalAvailableSpots")
+  // avs.innerHTML = `Available spots: ${availableSpots}`
+  let btn = document.getElementById("submitbtn")
+  btn.onclick = createParkingLot
+  btn.innerHTML = "+"
   modal.style.display = "block";
 }
 
 // When the user clicks on <span> (x), close the modal
 async function closeModal() {
   modal.style.display = "none";
-  // await fetch(`/parking-spots?place_id=${place_id}&type=increase`, {
-  //   method: 'PATCH', // *GET, POST, PUT, DELETE, etc.
-  //   headers: {
-  //     'Content-Type': 'application/json'
-  //   },
-  // })
 }
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function (event) {
-  if (event.target == modal) {``
+  if (event.target == modal) {
+    ``
     modal.style.display = "none";
   }
 }
 
+
+let startDate = document.getElementById("startDate")
+
 async function reserveSpot() {
   let license = document.getElementById("license").value
-  let startTime = document.getElementById("startTime").value
-  let endTime = document.getElementById("endTime").value
+  let startDate = new Date(document.getElementById("startDate").value)
+  let endDate = new Date(document.getElementById("endDate").value)
 
-  if(paid) {
-    localStorage.setItem("startTime", startTime)
-    
-    startDate = new Date("01/01/2007 " + startTime);
-    endDate = new Date("01/01/2007 " + endTime);
-    
+  if (paid) {
+
+    // startDate = new Date("01/01/2007 " + startDate);
+    // endDate = new Date("01/01/2007 " + endDate);
+
     diff = getMinutesBetweenDates(startDate, endDate)
-    
-    localStorage.setItem("endTime", endTime)
+
+    localStorage.setItem("startDate", startDate)
+    localStorage.setItem("startDate", endDate)
+
 
     let response = await fetch(`/reserve-spot`, {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({"license":license, "startTime": startTime, "endTime":endTime, "place_id": localStorage.getItem("place_id")})
+      body: JSON.stringify({
+        "license": license,
+        "startDate": startDate.toString(),
+        "endDate": endDate.toString(),
+        "place_id": localStorage.getItem("place_id")
+      })
     })
+
     let content = await response.json()
 
     content = JSON.parse(content);
 
-    location.reload()
-  }
-  else {
+    closeModal()
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          infoWindow.setPosition(pos);
+          infoWindow.setContent("Location found.");
+          infoWindow.open(map);
+          map.setCenter(pos);
+
+          // GET DIRECTIONS
+
+          if (directionsService == null)
+            directionsService = new google.maps.DirectionsService();
+          if (directionsDisplay == null)
+            directionsDisplay = new google.maps.DirectionsRenderer();
+
+          directionsDisplay.setMap(map);
+          directionsDisplay.setPanel(document.getElementById('panel'));
+
+          var request = {
+            origin: new google.maps.LatLng(pos.lat, pos.lng),
+            destination: new google.maps.LatLng(_position.lat(), _position.lng()),
+            optimizeWaypoints: true,
+            avoidHighways: false,
+            avoidTolls: false,
+            travelMode: google.maps.TravelMode.DRIVING
+          };
+
+          directionsService.route(request, function (response, status) {
+            if (status == google.maps.DirectionsStatus.OK) {
+              directionsDisplay.setDirections(response);
+            }
+          });
+        },
+        () => {
+          handleLocationError(true, infoWindow, map.getCenter());
+        }
+      );
+    } else {
+      // Browser doesn't support Geolocation
+      handleLocationError(false, infoWindow, map.getCenter());
+    }
+  } else {
     alert("Payment failed. Try again.")
   }
+}
+
+function inbetween(a, b, c) {
+  return a >= b && a <= c;
+}
+
+function checkTime(a, b, c, d) {
+  return inbetween(a, c, d) || inbetween(b, c, d) || inbetween(c, a, b) || inbetween(d, a, b);
+}
+
+function dateInput() {
+  let startDateVal = document.getElementById("startDate").value
+  let endDateVal = document.getElementById("endDate").value
+  if(startDateVal == "" || endDateVal == "") {
+    return
+  }
+  let startDate = new Date(startDateVal)
+  let endDate = new Date(endDateVal)
+
+  if (endDate <= startDate) {
+    alert("End time was earlier than Start time. Re-enter values.")
+    return
+  }
+
+  let counter = 0;
+  for (let reservation of reservations) {
+    if (checkTime(startDate, endDate, new Date(reservation["startDate"]), new Date(reservation["endDate"]))) {
+      counter++;
+    }
+  }
+
+
+  document.getElementById("modalAvailableSpots").innerHTML = `Available Spots: ${parking_location["allSpots"] - counter} / ${parking_location["allSpots"]}`
+
+}
+
+function clearMap() {
+  if (directionsService == null || directionsDisplay == null) {
+    return
+  }
+
+  directionsDisplay.setMap(null);
+  directionsDisplay.setPanel(document.getElementById('panel'));
+
+  placesList = document.getElementById("places").innerHTML = "";
+}
+
+async function createParkingLot() {
+  let name = document.getElementById("name").value
+  let lat = document.getElementById("lat").value
+  let lng = document.getElementById("lng").value
+  let spots = document.getElementById("spots").value
+  
+  let response = await fetch(`/parking-spots`, {
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      "name": name,
+      "lat": lat,
+      "lng": lng,
+      "availableSpots": spots
+    })
+  })
+  
+  let content = await response.json()
+  
+  content = JSON.parse(content);
+  
+  const placesList = document.getElementById("places");
+  const li = document.createElement("li");
+  li.textContent = name;
+  
+  li.setAttribute("data-location", content["name"])
+  li.setAttribute("data-lat", content["lat"])
+  li.setAttribute("data-lng", content["lng"])
+  li.setAttribute("data-spots", content["allSpots"])
+  li.setAttribute("data-id", content["id"])
+
+  li.onclick = () => {displayEditModal(li)}
+  placesList.appendChild(li);
+  closeModal();
+}
+
+var parkingId;
+var parking1;
+
+function displayEditModal(parking) {
+  document.getElementById("name").value = parking.getAttribute("data-location");
+  document.getElementById("lat").value = parking.getAttribute("data-lat");
+  document.getElementById("lng").value = parking.getAttribute("data-lng");
+  document.getElementById("spots").value = parking.getAttribute("data-spots");
+  parkingId = parking.getAttribute("data-id");
+  parking1 = parking
+
+  let btn = document.getElementById("submitbtn")
+  btn.onclick = editParkingLot
+  btn.innerHTML = "~"
+
+  displayModal();
+}
+
+async function editParkingLot() {
+  let name = document.getElementById("name").value
+  let lat = document.getElementById("lat").value
+  let lng = document.getElementById("lng").value
+  let spots = document.getElementById("spots").value
+  parking1.setAttribute("data-spots", spots)
+  let response = await fetch(`/parking-spots`, {
+    method: 'PATCH', // *GET, POST, PUT, DELETE, etc.
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      "name": name,
+      "lat": lat,
+      "lng": lng,
+      "availableSpots": spots,
+      "id": parkingId
+    })
+  })
+  
+  let content = await response.json()
+  
+  content = JSON.parse(content);
+
+  closeModal();
 }

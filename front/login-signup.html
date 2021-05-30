@@ -21,9 +21,11 @@
                     {% if errorSignup %}
                     <li class="tab"><a href="#login">Login</a></li>
                     <li class="tab"><a class="active" href="#signup">Sign Up</a></li>
+                    <li class="tab"><a href="#signupbusiness">Sign Up Business</a></li>
                     {% else %}
                     <li class="tab"><a class="active" href="#login">Login</a></li>
                     <li class="tab"><a href="#signup">Sign Up</a></li>
+                    <li class="tab"><a href="#signupbusiness">Sign Up Business</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -63,6 +65,35 @@
                             <input type="text" id="email" name="email" placeholder="Email...">
                             <label for="password"></label>
                             <input type="password" id="password" name="password" placeholder="Password...">
+                        </div>
+                        {% if errorSignup %}
+
+                        {% for error in errors %}
+                        <p class="form-error-message">
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- <div class="g-recaptcha" data-sitekey="6LcrM5IaAAAAAPFlGvM2nKx197UUCzSP-4OKwlXH" data-callback="correctCaptcha"></div> -->
+                        <div class="form-button-container">
+                            <button class="waves-effect waves-light blue btn" type="submit" value="Submit">Sign up</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="signupbusiness">
+                    <form action="/user/signupbusiness" method="POST">
+                        <div>
+                            <label for="username"></label>
+                            <input type="text" id="username" name="username" placeholder="Username...">
+                            <label for="email"></label>
+                            <input type="text" id="email" name="email" placeholder="Email...">
+                            <label for="password"></label>
+                            <input type="password" id="password" name="password" placeholder="Password...">
+                            <label for="businessname"></label>
+                            <input type="text" id="businessname" name="businessname" placeholder="Business Name...">
+                            <label for="businesstype"></label>
+                            <input type="text" id="businesstype" name="businesstype" placeholder="Business Type...">
                         </div>
                         {% if errorSignup %}
 

@@ -20,32 +20,63 @@
 <body>
   <div id="container">
     <div id="map"></div>
+    
+    {% if not businessname %}
     <div class="pac-card" id="pac-card">
       <div id="pac-container" style="position:absolute; left: 50%; transform: translate(-100%, -100%); top: 125px;">
         <input id="pac-input" type="text" placeholder="Enter a location" />
       </div>
     </div>
+    {% endif %}
     <div id="sidebar" style="text-align:center;">
+      {% if not businessname %}
       <h2>Results</h2>
       <ul id="places"></ul>
       <button id="more">Load more results</button>
+      {% else %}
+      <h2>Parking Lots</h2>
+      <h4> {{ businessname }} </h4>
+      <ul id="places">
+        {% for location in locations %}
+        <li onclick="displayEditModal(this)" data-location={{location.name}} data-lat={{location.lat}} data-lng={{location.lng}} data-spots={{location.allSpots}} data-id={{location.id}}>
+          {{ location.name }}
+        </li>
+        {% endfor %}
+      </ul>
+      <button id="add" onclick="displayCreateModal()">Add parking lot</button>
+      {% endif %}
     </div>
   </div>
   <a class="waves-effect waves-light red btn-small" href="/logout"
-    style="position:absolute; bottom: 1px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Log out</a> <!-- -->
+    style="position:absolute; bottom: 1px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Log out</a>
+  <a class="waves-effect waves-light red btn-small" onclick="clearMap()"
+    style="position:absolute; bottom: 100px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Clear map</a> <!-- -->
 
   <div id="myModal" class="modal">
     <div id="modalContent">
+      {% if not businessname %}
       <button onclick="closeModal()">X</button>
       <h3 id="modalAvailableSpots"></h3>
       <label for="license">License Plate Number</label>
       <input type="text" id="license" name="license">
-      <label for="startTime">Start time</label>
-      <input type="time" id="startTime" name="startTime">
-      <label for="endTime">End time</label>
-      <input type="time" id="endTime" name="endTime">
+      <label for="startDate">Start Date</label>
+      <input type="datetime-local" onchange="dateInput()" id="startDate" name="startDate">
+      <label for="endDate">End Date</label>
+      <input type="datetime-local" onchange="dateInput()" id="endDate" name="endDate">
+      {% else %}
+        <button onclick="closeModal()">X</button>
+        <h3 id="modalAvailableSpots">New Parking Lot</h3>
+        <label for="name">Parking Lot Name</label>
+        <input type="text" id="name" name="name">
+        <label for="lat">Latitude</label>
+        <input type="text" id="lat" name="lat">
+        <label for="lng">Longitude</label>
+        <input type="text" id="lng" name="lng">
+        <label for="spots">Available Spots</label>
+        <input type="text" id="spots" name="spots">
+        <button id="submitbtn" onclick="createParkingLot()">+</button>
+  {% endif %}
     </div>
-    <button onclick="reserveSpot()"></button>
   </div>
 
   <script src="./assets/js/_index.js"></script>
@@ -56,9 +87,11 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script> -->
   <!-- <button id="myBtn">Open Modal</button> -->
 
+  {% if not businessname %}
   <script async
   src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"> 
   </script>
+  {% endif %}
 
 </body>
 

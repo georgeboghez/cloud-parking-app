@@ -26,7 +26,9 @@ var zlib = require("zlib")
 const formidable = require("formidable");
 const auth = require("./middleware/auth")
 const translate = require('./translate')
-const { Datastore } = require("@google-cloud/datastore");
+const {
+  Datastore
+} = require("@google-cloud/datastore");
 const datastore = new Datastore({
   projectId: 'test24-1561374558621', //eg my-project-0o0o0o0o'
   keyFilename: "test24-1561374558621-84e3e44e928c.json" //eg my-project-0fwewexyz.json
@@ -63,15 +65,15 @@ app.use('/assets/', express.static(__dirname + '/front/assets/', {
   // maxage: '1h'
 }))
 
-function parseCookies (request) {
+function parseCookies(request) {
   var list = {},
-  rc = request.headers.cookie;
-  
-  rc && rc.split(';').forEach(function( cookie ) {
+    rc = request.headers.cookie;
+
+  rc && rc.split(';').forEach(function (cookie) {
     var parts = cookie.split('=');
     list[parts.shift().trim()] = decodeURI(parts.join('='));
   });
-  
+
   return list;
 }
 
@@ -90,17 +92,26 @@ const topicName = 'MyTopic';
 // const data = JSON.stringify({foo: 'bar'});
 
 // Imports the Google Cloud client library
-const {PubSub} = require('@google-cloud/pubsub');
-const { json } = require("body-parser");
-const { url } = require("inspector");
+const {
+  PubSub
+} = require('@google-cloud/pubsub');
+const {
+  json
+} = require("body-parser");
+const {
+  url
+} = require("inspector");
 
 // Creates a client; cache this for further use
-const pubSubClient = new PubSub({project_id: "test24-1561374558621", keyFilename: "test24-1561374558621-286fa15cf041.json"});
+const pubSubClient = new PubSub({
+  project_id: "test24-1561374558621",
+  keyFilename: "test24-1561374558621-286fa15cf041.json"
+});
 
 async function publishMessage(data) {
   // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
   const dataBuffer = Buffer.from(data);
-  
+
   try {
     const messageId = await pubSubClient.topic(topicName).publish(dataBuffer);
     console.log(`Message ${messageId} published.`);
@@ -131,18 +142,18 @@ function listenForMessages() {
     // "Ack" (acknowledge receipt of) the message
     message.ack();
   };
-  
+
   // Create an event handler to handle errors
   const errorHandler = function (error) {
     // Do something with the error
     console.error(`ERROR: ${error}`);
     throw error;
   };
-  
+
   // Listen for new messages/errors until timeout is hit
   subscription.on('message', messageHandler);
   subscription.on('error', errorHandler);
-  
+
   // setTimeout(() => {
   //   subscription.removeListener('message', messageHandler);
   //   subscription.removeListener('error', errorHandler);
@@ -173,24 +184,28 @@ app.post("/sendMessage", async (req, res) => {
       const {
         message
       } = fields;
-      
+
       let errs = {};
-      
+
       if (message.length == 0) {
         errs.textContentErr = "Please enter the text content";
       }
-      
+
       if (Object.keys(errs).length != 0) {
         console.error('Error', errs)
         return res.status(400).json(errs);
       }
-      
+
       let email = cookies["Email"]
-      publishMessage(JSON.stringify({"from": email, "to": "gvb@gmail.com", "message" : message}))
+      publishMessage(JSON.stringify({
+        "from": email,
+        "to": "gvb@gmail.com",
+        "message": message
+      }))
       res.redirect("/")
     })
   } catch (error) {
-    console.log(error.message) 
+    console.log(error.message)
   }
 })
 
@@ -198,7 +213,31 @@ app.get("/", auth, async (req, res) => {
   try {
     let cookies = parseCookies(req)
     let email = cookies["Email"]
+    email = email.replace('%40', '@')
+
+    const query = datastore.createQuery('User').filter("email", "=", email);
+
+    const [users] = await datastore.runQuery(query);
+
+    if (users.length == 0) {
+      return res.status(400).render("./login-signup.html", {
+        errors: ["User does not exist"]
+      });
+    }
+    let user = users[0]
+    let locations = []
+    if (user["businessname"]) {
+      email = email.replace('@', '%40')
+      const query = datastore.createQuery('Location').filter("email", "=", email);
+      [locations] = await datastore.runQuery(query);
+      for (let i = 0; i < locations.length; ++i) {
+        locations[i]["id"] = locations[i][datastore.KEY]['id']
+      }
+    }
+
     res.render("./map.html", {
+      businessname: user["businessname"],
+      locations: locations,
       messages: []
     })
   } catch (e) {
@@ -216,26 +255,88 @@ function getRandom() {
   return Math.floor(Math.random() * Math.floor(40)) + 10;
 }
 
+app.post('/parking-spots', async (req, res) => {
+  try {
+    let cookies = parseCookies(req)
+    let email = cookies["Email"]
+
+    const kind = "Location";
+    const locationKey = datastore.key([kind]);
+    const location = {
+      key: locationKey,
+      data: {
+        "allSpots": req.body["availableSpots"],
+        "name": req.body["name"],
+        "availableSpots": req.body["availableSpots"],
+        "place_id": "custom",
+        "lat": req.body["lat"],
+        "lng": req.body["lng"],
+        "email": email
+      }
+    };
+    await datastore.save(location);
+    location.data["id"] = location["key"]["id"]
+    return res.json(JSON.stringify(location.data))
+  } catch (error) {
+    return res.json(JSON.stringify({
+      "message": error.message
+    }))
+  }
+})
+
+app.patch('/parking-spots', async (req, res) => {
+  try {
+    let cookies = parseCookies(req)
+    let email = cookies["Email"]
+    const locationKey = datastore.key(['Location', parseInt(req.body["id"])]);
+    let query = datastore.createQuery('Location').filter("__key__", "=", locationKey);
+    let [locations] = await datastore.runQuery(query);
+
+    let location = locations[0]
+
+    location["allSpots"] = req.body["availableSpots"]
+    location["availableSpots"] = req.body["availableSpots"]
+    location["name"] = req.body["name"]
+    location["lat"] = req.body["lat"]
+    location["lng"] = req.body["lng"]
+
+    await datastore.update(location);
+    return res.json(JSON.stringify(location))
+  } catch (error) {
+    console.log(error.message)
+    return res.json(JSON.stringify({
+      "message": error.message
+    }))
+  }
+})
+
 app.get('/parking-spots', async (req, res) => {
   try {
     const req_url = new URL('https://www.google.com' + req.url)
     const place_id = req_url.searchParams.get("place_id")
-    
+
+    if (place_id == null || place_id == undefined) {
+      let query = datastore.createQuery('Location').filter("place_id", "=", "custom");
+      let [locations] = await datastore.runQuery(query);
+      return res.status(200).json(JSON.stringify({
+        "locations": locations
+      }))
+    }
+
     const lat = req_url.searchParams.get("lat")
     const lng = req_url.searchParams.get("lng")
 
-    let query = datastore.createQuery('Location').filter("id", "=", place_id);
+    let query = datastore.createQuery('Location').filter("place_id", "=", place_id);
     let [locations] = await datastore.runQuery(query);
-    
-    if (locations.length > 0) {
-        return res.status(200).json(JSON.stringify({"spots":locations[0]}));
-    }
 
-    query = datastore.createQuery('Location').filter("place_id", "=", place_id);
-    [locations] = await datastore.runQuery(query);
-    
     if (locations.length > 0) {
-        return res.status(200).json(JSON.stringify(locations[0]));
+      query = datastore.createQuery('Reservation').filter("place_id", "=", place_id);
+      let [reservations] = await datastore.runQuery(query);
+
+      return res.status(200).json(JSON.stringify({
+        "location": locations[0],
+        "reservations": reservations
+      }));
     }
 
     const allSpots = getRandom();
@@ -246,84 +347,99 @@ app.get('/parking-spots', async (req, res) => {
     const kind = "Location";
     const locationKey = datastore.key([kind]);
     const location = {
-        key: locationKey,
-        data: {
-            "allSpots": allSpots,
-            "availableSpots": allSpots,
-            "place_id": place_id,
-            "lat": lat,
-            "lng": lng
-        }
+      key: locationKey,
+      data: {
+        "allSpots": allSpots,
+        "availableSpots": allSpots,
+        "place_id": place_id,
+        "lat": lat,
+        "lng": lng
+      }
     };
-    
     await datastore.save(location);
-    return res.json(JSON.stringify(location.data))
+    return res.json(JSON.stringify({
+      "location": location.data,
+      "reservations": []
+    }))
   } catch (error) {
-    return res.json(JSON.stringify({"message":error.message}))
+    return res.json(JSON.stringify({
+      "message": error.message
+    }))
   }
 })
 
-app.patch('/parking-spots', async (req, res) => {
-  try {
-    const req_url = new URL('https://www.google.com' + req.url)
-    const place_id = req_url.searchParams.get("place_id")
-    const type = req_url.searchParams.get("type")
+// app.patch('/parking-spots', async (req, res) => {
+//   try {
+//     const req_url = new URL('https://www.google.com' + req.url)
+//     const place_id = req_url.searchParams.get("place_id")
+//     const type = req_url.searchParams.get("type")
 
-    let query = datastore.createQuery('Location').filter("id", "=", place_id);
-    let [locations] = await datastore.runQuery(query);
-    
-    let location = null;
-    if (locations.length > 0) {
-      location = locations[0];
-    }
-    
-    query = datastore.createQuery('Location').filter("place_id", "=", place_id);
-    [locations] = await datastore.runQuery(query);
-    
-    if (locations.length > 0) {
-        location = locations[0];
-    }
+//     let query = datastore.createQuery('Location').filter("id", "=", place_id);
+//     let [locations] = await datastore.runQuery(query);
 
-    if(location != null) {
-      location["availableSpots"] = type == "decrease" ? --location["availableSpots"] : ++location["availableSpots"];
+//     let location = null;
+//     if (locations.length > 0) {
+//       location = locations[0];
+//     }
 
-      await datastore.update(location);
-      return res.json(JSON.stringify(location))
-    }
+//     query = datastore.createQuery('Location').filter("place_id", "=", place_id);
+//     [locations] = await datastore.runQuery(query);
 
-    return res.status(404).json(JSON.stringify({"error": `location ${place_id} not found`}));
-  } catch (error) {
-    return res.json(JSON.stringify({"message":error.message}))
-  }
-})
+//     if (locations.length > 0) {
+//       location = locations[0];
+//     }
+
+//     if (location != null) {
+//       location["availableSpots"] = type == "decrease" ? --location["availableSpots"] : ++location["availableSpots"];
+
+//       await datastore.update(location);
+//       return res.json(JSON.stringify(location))
+//     }
+
+//     return res.status(404).json(JSON.stringify({
+//       "error": `location ${place_id} not found`
+//     }));
+//   } catch (error) {
+//     return res.json(JSON.stringify({
+//       "message": error.message
+//     }))
+//   }
+// })
 
 app.get('/check-notifications', async (req, res) => {
   let translation = await translate.translate(notificationMsg, "en")
-  res.status(200).json(JSON.stringify({"message": notificationMsg, "translation" : translation[0]}))
+  res.status(200).json(JSON.stringify({
+    "message": notificationMsg,
+    "translation": translation[0]
+  }))
 })
 
 app.post('/reserve-spot', async (req, res) => {
   try {
     let cookies = parseCookies(req)
     let email = cookies["Email"]
-  
-    const kind = "Reservations";
+
+    const kind = "Reservation";
     const reservationKey = datastore.key([kind]);
     const reservation = {
-        key: reservationKey,
-        data: {
-            "startTime": req.body["startTime"],
-            "endTime": req.body["endTime"],
-            "license": req.body["license"],
-            "email":email,
-            "place_id": req.body["place_id"]
-        }
+      key: reservationKey,
+      data: {
+        "startDate": req.body["startDate"],
+        "endDate": req.body["endDate"],
+        "license": req.body["license"],
+        "email": email,
+        "place_id": req.body["place_id"]
+      }
     };
-    
+
     await datastore.save(reservation);
-    return res.json(JSON.stringify({"msg": "success"}))    
+    return res.json(JSON.stringify({
+      "msg": "success"
+    }))
   } catch (error) {
-    return res.json(JSON.stringify({"error": error.message}))
+    return res.json(JSON.stringify({
+      "error": error.message
+    }))
   }
 })
 
