@@ -348,27 +348,27 @@ function addPlaces(places, map, pyrmont, customPlaces) {
   }
 }
 
-var lastMessage = '';
+// var lastMessage = '';
 
-setInterval(() => {
-  fetch('/check-notifications')
-    .then(response => response.json())
-    .then(data => {
-      data = JSON.parse(data);
-      if (data.message && data.message != lastMessage) {
-        M.toast({
-          html: data.message
-        });
-        M.toast({
-          html: data.translation
-        });
-        lastMessage = data.message;
-      }
-    })
-    .catch((e) => {
-      console.log(e);
-    })
-}, 2000);
+// setInterval(() => {
+//   fetch('/check-notifications')
+//     .then(response => response.json())
+//     .then(data => {
+//       data = JSON.parse(data);
+//       if (data.message && data.message != lastMessage) {
+//         M.toast({
+//           html: data.message
+//         });
+//         M.toast({
+//           html: data.translation
+//         });
+//         lastMessage = data.message;
+//       }
+//     })
+//     .catch((e) => {
+//       console.log(e);
+//     })
+// }, 2000);
 
 
 // Get the modal
@@ -817,3 +817,23 @@ async function editParkingLot() {
 
   closeModal();
 }
+
+function audioSrc(src) {
+  var music = document.getElementById("audiomsg");
+  music.src = src;
+}
+
+function play() {
+  var music = document.getElementById("audiomsg");
+  var play_audio_btn = document.getElementById("play-audio-btn");
+  
+  if (music.paused) {
+    music.play();
+    play_audio_btn.innerText = "pause audio";
+  } else {
+    music.pause();
+    play_audio_btn.innerText = "play audio";
+  }
+}
+
+var lastMessage = '';

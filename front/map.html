@@ -8,13 +8,13 @@
   <title>Place Search Pagination</title>
   <!-- Async script executes immediately and must be after any DOM elements used in callback. -->
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
-    async></script>
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
+  async></script>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
   <link rel="stylesheet" type="text/css" href="./assets/css/_style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-
+  
 </head>
 
 <body>
@@ -33,6 +33,9 @@
       <h2>Results</h2>
       <ul id="places"></ul>
       <button id="more">Load more results</button>
+      <div>
+        <audio id="audiomsg"><source src= /></audio>
+      </div>
       {% else %}
       <h2>Parking Lots</h2>
       <h4> {{ businessname }} </h4>
@@ -48,51 +51,89 @@
     </div>
   </div>
   <a class="waves-effect waves-light red btn-small" href="/logout"
-    style="position:absolute; bottom: 1px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Log out</a>
+  style="position:absolute; bottom: 1px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Log out</a>
   <a class="waves-effect waves-light red btn-small" onclick="clearMap()"
-    style="position:absolute; bottom: 100px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Clear map</a> <!-- -->
-
-  <div id="myModal" class="modal">
-    <div id="modalContent">
-      {% if not businessname %}
-      <button onclick="closeModal()">X</button>
-      <h3 id="modalAvailableSpots"></h3>
-      <label for="license">License Plate Number</label>
-      <input type="text" id="license" name="license">
-      <label for="startDate">Start Date</label>
-      <input type="datetime-local" onchange="dateInput()" id="startDate" name="startDate">
-      <label for="endDate">End Date</label>
-      <input type="datetime-local" onchange="dateInput()" id="endDate" name="endDate">
-      {% else %}
-        <button onclick="closeModal()">X</button>
-        <h3 id="modalAvailableSpots">New Parking Lot</h3>
-        <label for="name">Parking Lot Name</label>
-        <input type="text" id="name" name="name">
-        <label for="lat">Latitude</label>
-        <input type="text" id="lat" name="lat">
-        <label for="lng">Longitude</label>
-        <input type="text" id="lng" name="lng">
-        <label for="spots">Available Spots</label>
-        <input type="text" id="spots" name="spots">
-        <button id="submitbtn" onclick="createParkingLot()">+</button>
-  {% endif %}
-    </div>
-  </div>
-
-  <script src="./assets/js/_index.js"></script>
-
-  <!-- <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
-    async></script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script> -->
-  <!-- <button id="myBtn">Open Modal</button> -->
-
+  style="position:absolute; bottom: 100px; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg); -ms-transform: rotate(-90deg); -o-transform: rotate(-90deg); transform-origin: left top;">Clear map</a> <!-- -->
   {% if not businessname %}
-  <script async
-  src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"> 
+  <button
+  id="play-audio-btn"
+  onClick="play()"
+  class="waves-effect waves-light blue btn-small"
+  style="
+  position: absolute;
+  bottom: 250px;
+  width: 100px;
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  transform-origin: left top;
+  "
+  >
+  Play Audio
+</button>
+{% endif %}
+
+<div id="myModal" class="modal">
+  <div id="modalContent">
+    {% if not businessname %}
+    <button onclick="closeModal()">X</button>
+    <h3 id="modalAvailableSpots"></h3>
+    <label for="license">License Plate Number</label>
+    <input type="text" id="license" name="license">
+    <label for="startDate">Start Date</label>
+    <input type="datetime-local" onchange="dateInput()" id="startDate" name="startDate">
+    <label for="endDate">End Date</label>
+    <input type="datetime-local" onchange="dateInput()" id="endDate" name="endDate">
+    {% else %}
+    <button onclick="closeModal()">X</button>
+    <h3 id="modalAvailableSpots">New Parking Lot</h3>
+    <label for="name">Parking Lot Name</label>
+    <input type="text" id="name" name="name">
+    <label for="lat">Latitude</label>
+    <input type="text" id="lat" name="lat">
+    <label for="lng">Longitude</label>
+    <input type="text" id="lng" name="lng">
+    <label for="spots">Available Spots</label>
+    <input type="text" id="spots" name="spots">
+    <button id="submitbtn" onclick="createParkingLot()">+</button>
+    {% endif %}
+  </div>
+</div>
+
+<script src="./assets/js/_index.js"></script>
+
+<!-- <script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAD7ME4ZPUgqXok4fScKr25uH2_2IJ6bjw&callback=initMap&libraries=places&map_ids=8d193001f940fde3"
+  async></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script> -->
+  <!-- <button id="myBtn">Open Modal</button> -->
+  
+  {% if not businessname %}
+  <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"> 
+    
+  </script>
+  <script>
+    setInterval(() => {
+      fetch('/check-notifications')
+      .then(response => response.json())
+      .then(data => { 
+        data = JSON.parse(data);
+        if(data.message && data.message != lastMessage) {
+          M.toast({html: data.message});
+          M.toast({html: data.messageEng});
+          audioSrc('/assets/audio/' + data.audio);
+          play();
+          lastMessage = data.message;
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      })
+    }, 2000);
   </script>
   {% endif %}
-
+  
 </body>
 
 </html>

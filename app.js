@@ -51,6 +51,56 @@ nunjucks.configure('front', {
   express: app,
 })
 
+const { ServiceBusClient } = require("@azure/service-bus");
+
+var filenames = {
+  'Conduceti prudent' : 'conduceti_prudent.wav', 
+  'Purtati centura de siguranta' : 'centura.wav', 
+  'Nu uitati copilul in masina' : 'copilul.wav', 
+  'Pe drumurile nationale, aprindeti luminile de intalnire' : 'luminile.wav'
+}
+
+const connectionString =
+process.env.SERVICEBUS_CONNECTION_STRING ||
+"Endpoint=sb://parking-azure.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=4t/re/ieD7MEH0eOti0WkpxrsHYauETMBL75wqGW9YY=";
+
+const queueName = process.env.QUEUE_NAME || "Notifications";
+
+var notificationMsg = "";
+async function receiveMsgs() {
+  const sbClient = new ServiceBusClient(connectionString);
+
+  // If receiving from a subscription you can use the createReceiver(topicName, subscriptionName) overload
+  // instead.
+  const queueReceiver = sbClient.createReceiver(queueName);
+
+  // To receive messages from sessions, use getSessionReceiver instead of getReceiver or look at
+  // the sample in sessions.ts file
+  try {
+    while(true) {
+      const messages = await queueReceiver.receiveMessages(1, {
+        maxWaitTimeInMs: 5000,
+      });
+
+      if (!messages.length) {
+        continue;
+      }
+
+      // console.log(`Received message: ${messages[0].body}`);
+      notificationMsg = messages[0].body.toString();
+
+      await queueReceiver.completeMessage(messages[0]);
+    }
+    await queueReceiver.close();
+  } finally {
+    await sbClient.close();
+  }
+}
+
+receiveMsgs().catch((err) => {
+  console.log("Error occurred: ", err);
+});
+
 app.get(/assets\/postImages\/*/, (req, res) => {
   let img = fs.readFileSync(__dirname + "/front" + req.url)
   let unzipped = zlib.unzipSync(img)
@@ -407,11 +457,18 @@ app.get('/parking-spots', async (req, res) => {
 // })
 
 app.get('/check-notifications', async (req, res) => {
-  let translation = await translate.translate(notificationMsg, "en")
-  res.status(200).json(JSON.stringify({
-    "message": notificationMsg,
-    "translation": translation[0]
-  }))
+  var messageEng = ''
+  if(notificationMsg != '') {
+    messageEng = await translate(notificationMsg, "en");
+  }
+
+  res.status(200).json(JSON.stringify({ message: notificationMsg, messageEng: messageEng, audio: filenames[notificationMsg] }));
+
+  // let translation = await translate.translate(notificationMsg, "en")
+  // res.status(200).json(JSON.stringify({
+  //   "message": notificationMsg,
+  //   "translation": translation[0]
+  // }))
 })
 
 app.post('/reserve-spot', async (req, res) => {
