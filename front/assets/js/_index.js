@@ -48,8 +48,6 @@ function addMarker(_position, icon, map, type, name, pyrmont, place_id) {
     name: name
   });
 
-
-
   infoWindow = new google.maps.InfoWindow();
   const placesList = document.getElementById("places");
   const li = document.createElement("li");
@@ -153,7 +151,7 @@ function generateParkingSpots(map, pyrmont) {
         },
       })
       let content = await response.json()
-  
+
       content = JSON.parse(content);
 
       addPlaces(results, map, pyrmont, content.locations);
@@ -343,7 +341,7 @@ function addPlaces(places, map, pyrmont, customPlaces) {
   }
 
   for (const place of customPlaces) {
-    let location = new google.maps.LatLng(parseFloat(place.lat),parseFloat(place.lng))
+    let location = new google.maps.LatLng(parseFloat(place.lat), parseFloat(place.lng))
     addMarker(location, icons.parking.icon, map, "parking", place.name, pyrmont, place.id)
   }
 }
@@ -537,7 +535,7 @@ function onGooglePaymentButtonClicked() {
   let startDateVal = document.getElementById("startDate").value
   let endDateVal = document.getElementById("endDate").value
 
-  if(startDateVal == "" || endDateVal == "") {
+  if (startDateVal == "" || endDateVal == "") {
     alert("Please insert a valid Starting Date or a valid Ending Date.")
     return;
   }
@@ -690,18 +688,18 @@ async function reserveSpot() {
   }
 }
 
-function inbetween(a, b, c) {
-  return a >= b && a <= c;
+function inBetween(a, start, finish) {
+  return a >= start && a <= finish;
 }
 
 function checkTime(a, b, c, d) {
-  return inbetween(a, c, d) || inbetween(b, c, d) || inbetween(c, a, b) || inbetween(d, a, b);
+  return inBetween(a, c, d) || inBetween(b, c, d) || inBetween(c, a, b) || inBetween(d, a, b);
 }
 
 function dateInput() {
   let startDateVal = document.getElementById("startDate").value
   let endDateVal = document.getElementById("endDate").value
-  if(startDateVal == "" || endDateVal == "") {
+  if (startDateVal == "" || endDateVal == "") {
     return
   }
   let startDate = new Date(startDateVal)
@@ -719,9 +717,7 @@ function dateInput() {
     }
   }
 
-
   document.getElementById("modalAvailableSpots").innerHTML = `Available Spots: ${parking_location["allSpots"] - counter} / ${parking_location["allSpots"]}`
-
 }
 
 function clearMap() {
@@ -740,7 +736,7 @@ async function createParkingLot() {
   let lat = document.getElementById("lat").value
   let lng = document.getElementById("lng").value
   let spots = document.getElementById("spots").value
-  
+
   let response = await fetch(`/parking-spots`, {
     method: 'POST', // *GET, POST, PUT, DELETE, etc.
     headers: {
@@ -753,22 +749,24 @@ async function createParkingLot() {
       "availableSpots": spots
     })
   })
-  
+
   let content = await response.json()
-  
+
   content = JSON.parse(content);
-  
+
   const placesList = document.getElementById("places");
   const li = document.createElement("li");
   li.textContent = name;
-  
+
   li.setAttribute("data-location", content["name"])
   li.setAttribute("data-lat", content["lat"])
   li.setAttribute("data-lng", content["lng"])
   li.setAttribute("data-spots", content["allSpots"])
   li.setAttribute("data-id", content["id"])
 
-  li.onclick = () => {displayEditModal(li)}
+  li.onclick = () => {
+    displayEditModal(li)
+  }
   placesList.appendChild(li);
   closeModal();
 }
@@ -810,9 +808,9 @@ async function editParkingLot() {
       "id": parkingId
     })
   })
-  
+
   let content = await response.json()
-  
+
   content = JSON.parse(content);
 
   closeModal();
@@ -826,7 +824,7 @@ function audioSrc(src) {
 function play() {
   var music = document.getElementById("audiomsg");
   var play_audio_btn = document.getElementById("play-audio-btn");
-  
+
   if (music.paused) {
     music.play();
     play_audio_btn.innerText = "pause audio";

@@ -326,9 +326,9 @@ app.post('/parking-spots', async (req, res) => {
     };
     await datastore.save(location);
     location.data["id"] = location["key"]["id"]
-    return res.json(JSON.stringify(location.data))
+    return res.status(201).json(JSON.stringify(location.data))
   } catch (error) {
-    return res.json(JSON.stringify({
+    return res.status(500).json(JSON.stringify({
       "message": error.message
     }))
   }
@@ -342,6 +342,10 @@ app.patch('/parking-spots', async (req, res) => {
     let query = datastore.createQuery('Location').filter("__key__", "=", locationKey);
     let [locations] = await datastore.runQuery(query);
 
+    if(locations.length == 0) {
+      return res.status(404).json(JSON.stringify({"msg": "Location not found"}));
+    }
+
     let location = locations[0]
 
     location["allSpots"] = req.body["availableSpots"]
@@ -351,10 +355,10 @@ app.patch('/parking-spots', async (req, res) => {
     location["lng"] = req.body["lng"]
 
     await datastore.update(location);
-    return res.json(JSON.stringify(location))
+    return res.status(200).json(JSON.stringify(location))
   } catch (error) {
     console.log(error.message)
-    return res.json(JSON.stringify({
+    return res.status(500).json(JSON.stringify({
       "message": error.message
     }))
   }
@@ -407,12 +411,12 @@ app.get('/parking-spots', async (req, res) => {
       }
     };
     await datastore.save(location);
-    return res.json(JSON.stringify({
+    return res.status(200).json(JSON.stringify({
       "location": location.data,
       "reservations": []
     }))
   } catch (error) {
-    return res.json(JSON.stringify({
+    return res.status(500).json(JSON.stringify({
       "message": error.message
     }))
   }
@@ -490,11 +494,11 @@ app.post('/reserve-spot', async (req, res) => {
     };
 
     await datastore.save(reservation);
-    return res.json(JSON.stringify({
-      "msg": "success"
+    return res.status(201).json(JSON.stringify({
+      "id": reservation["key"][datastore.KEY]['id']
     }))
   } catch (error) {
-    return res.json(JSON.stringify({
+    return res.status(500).json(JSON.stringify({
       "error": error.message
     }))
   }
